@@ -1,3 +1,4 @@
+// Objective: Create a basic Express server with multiple routes.
 import express from 'express';
 import dotenv from 'dotenv';
 
