@@ -11,43 +11,45 @@
 // •	Conditional routing and redirects
 // •	Serving HTML files with res.sendFile
 
+import express from 'express';
+import fs from 'fs';
+import path  from 'path';
+import {parse} from 'querystring';
+import url from 'url';
 
-import express from "express";
-import dotenv from "dotenv";
-import { parse } from "querystring";
-import { join } from "path";
-import url from "url";
-
-// sending static file to server via get api
-dotenv.config();
 const app = express();
-const PORT = process.env.PORT;
+const PORT = 3000;
 
-const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
-// console.log(join(__dirname,"class"))
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
-app.use("/assets", express.static(join(__dirname, "class")));
-
+// Serve the login page
 app.get("/", (req, res) => {
-  res.status(200).send("<h1>HomePage(Get Api)</h1>");
+  res.sendFile(path.join(__dirname, "views", "login.html"));
 });
 
-app
-  .get("/admin/login", (req, res) => {
-    res.sendFile(join(__dirname, "views", "login.html"));
-  })
-  .post("/admin/login", (req, res) => {
-    let body = "";
-    req.on("data", (data) => (body += data));
-    req.on("end", () => {
-      const { email, password } = parse(body);
-      // res.send(`<h1 style="color:darkRed">Email: ${email}<br> Password: ${password}<br></h1>`)
-      res.redirect("/admin/dashboard");
-    });
+// Manual parsing of POST request body
+app.post("/admin/login", (req, res) => {
+  let body = "";
+
+  req.on("data", (chunk) => {
+    body += chunk.toString(); 
   });
 
-app.get("/admin/dashboard", (req, res) => {
-  res.sendFile(join(__dirname, "views", "dashboard.html"));
+  req.on("end", () => {
+    const {email, password} = parse(body);
+
+    if (email === "admin@mail.com" && password === "admin123") {
+      res.redirect("/admin/dashboard");
+    } else {
+      res.sendFile(path.join(__dirname, "views", "error.html"));
+    }
+  });
 });
 
-app.listen(PORT, () => console.log(`Server started at http://localhost:3000`));
+app.get("/admin/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "dashboard.html"));
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
